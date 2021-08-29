@@ -1,2 +1,5 @@
 .idea/
 .DS_Store
+Hardware*.sh
+tools/bin/Hardware Simulator.dat
+tools/HardwareSimulator.sh
