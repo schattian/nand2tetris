@@ -10,5 +10,52 @@
 // When no key is pressed, the program clears the screen, i.e. writes
 // "white" in every pixel;
 // the screen should remain fully clear as long as no key is pressed.
+(GETKEY)
+    @8192
+    D=A
+    @i
+    M=D
 
-// Put your code here.
+    @KBD
+    D=M
+
+    @WHITE
+    D;JEQ
+
+    @BLACK
+    0;JMP
+
+
+(WHITE)
+    @SCREEN
+    D=A
+    @i
+    A=D+M
+    M=0
+
+    @i
+    M=M-1
+    D=M
+
+    @WHITE
+    D;JGE
+
+    @GETKEY
+    0;JMP
+
+(BLACK)
+    @SCREEN
+    D=A
+    @i
+    A=D+M
+    M=-1
+
+    @i
+    M=M-1
+    D=M
+
+    @BLACK
+    D;JGE
+
+    @GETKEY
+    0;JMP
