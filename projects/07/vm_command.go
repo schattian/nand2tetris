@@ -42,7 +42,6 @@ func (cmd *pushVMCommand) GetOp() VMOperation {
 	return OpPush
 }
 
-// TODO: refactor as bytes.Buffer
 func (cmd *pushVMCommand) MarshalASM() (s string, err error) {
 	if cmd.seg.IsVirtual() {
 		s += translateAssignConstantD(cmd.segIdx)

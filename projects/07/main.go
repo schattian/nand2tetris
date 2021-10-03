@@ -1,6 +1,5 @@
 package main
 
-// TODO: refactor to use maps when mapping constants and measure changes
 import (
 	"errors"
 	"io"
@@ -45,15 +44,3 @@ func main() {
 		}
 	}
 }
-
-//var ops = map[string]VMOperation{
-//	"add": OP_ADD,
-//	"sub": OP_SUB,
-//	"neg": OP_NEG,
-//	"eq": OP_EQ,
-//	"lt": OP_LT,
-//	"gt": OP_GT,
-//	"and": OP_AND,
-//	"or": OP_OR,
-//	"not": OP_NOT,
-//}
