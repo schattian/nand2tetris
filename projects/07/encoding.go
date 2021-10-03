@@ -4,14 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 )
 
 type VMDecoder struct {
 	moduleName string
-	r io.Reader
-	s *bufio.Scanner
+	r          io.Reader
+	s          *bufio.Scanner
+	pc         uint16
 }
 
 func NewVMDecoder(moduleName string, r io.Reader) *VMDecoder {
@@ -64,6 +66,7 @@ func (d *VMDecoder) decodeMemIndex(memIndex string) (uint16, error) {
 }
 
 func (d *VMDecoder) decode(ln string) (VMCommand, error) {
+	defer d.incPc()
 	ln = d.stripComments(ln)
 	if ln == "" {
 		return nil, nil
@@ -85,7 +88,11 @@ func (d *VMDecoder) decode(ln string) (VMCommand, error) {
 			return nil, err
 		}
 	}
-	return NewVMCommand(d.moduleName, op, memSegment, memIndex)
+	return NewVMCommand(d.moduleName, op, memSegment, memIndex, d.pc)
+}
+
+func (d *VMDecoder) incPc() {
+	d.pc += 1
 }
 
 func (d *VMDecoder) Decode() (VMCommand, error) {
@@ -104,7 +111,6 @@ func (d *VMDecoder) stripComments(s string) string {
 	return strings.TrimSpace(strings.Split(s, "//")[0])
 }
 
-
 type ASMEncoder struct {
 	w io.Writer
 }
@@ -117,6 +123,9 @@ func (e *ASMEncoder) Encode(vmc VMCommand) error {
 	b, err := vmc.MarshalASM()
 	if err != nil {
 		return err
+	}
+	if _, debug := os.LookupEnv("DEBUG"); debug {
+		b = fmt.Sprintf("//%s\n", vmc) + b
 	}
 	_, err = e.w.Write([]byte(b))
 	if err != nil {

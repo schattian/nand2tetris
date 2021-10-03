@@ -1,4 +1,4 @@
-// push
+//push constant 10
 @10
 D=A
 @SP
@@ -6,18 +6,18 @@ A=M
 M=D
 @SP
 M=M+1
-// pop
+//pop local 0
 @LCL
-D=M+D
+D=M
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
-M=D// push
+M=D
+//push constant 21
 @21
 D=A
 @SP
@@ -25,7 +25,7 @@ A=M
 M=D
 @SP
 M=M+1
-// push
+//push constant 22
 @22
 D=A
 @SP
@@ -33,29 +33,33 @@ A=M
 M=D
 @SP
 M=M+1
-// pop
+//pop argument 2
+@2
+D=A
 @ARG
 D=M+D
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
-M=D// pop
+M=D
+//pop argument 1
+@1
+D=A
 @ARG
 D=M+D
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
-M=D// push
+M=D
+//push constant 36
 @36
 D=A
 @SP
@@ -63,18 +67,20 @@ A=M
 M=D
 @SP
 M=M+1
-// pop
+//pop this 6
+@6
+D=A
 @THIS
 D=M+D
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
-M=D// push
+M=D
+//push constant 42
 @42
 D=A
 @SP
@@ -82,7 +88,7 @@ A=M
 M=D
 @SP
 M=M+1
-// push
+//push constant 45
 @45
 D=A
 @SP
@@ -90,29 +96,33 @@ A=M
 M=D
 @SP
 M=M+1
-// pop
+//pop that 5
+@5
+D=A
 @THAT
 D=M+D
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
-M=D// pop
+M=D
+//pop that 2
+@2
+D=A
 @THAT
 D=M+D
 @R13
 M=D
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @R13
 A=M
-M=D// push
+M=D
+//push constant 510
 @510
 D=A
 @SP
@@ -120,29 +130,24 @@ A=M
 M=D
 @SP
 M=M+1
-// pop
-@6
-D=A
-@5
-D=A+D
-@R13
-M=D
+//pop temp 6
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
-@R13
-A=M
-M=D// push
+@11
+M=D
+//push local 0
 @LCL
-A=M+D
+A=M
 D=M
 @SP
 A=M
 M=D
 @SP
 M=M+1
-// push
+//push that 5
+@5
+D=A
 @THAT
 A=M+D
 D=M
@@ -151,7 +156,15 @@ A=M
 M=D
 @SP
 M=M+1
-// push
+//add
+@SP
+AM=M-1
+D=M
+A=A-1
+M=M+D
+//push argument 1
+@1
+D=A
 @ARG
 A=M+D
 D=M
@@ -160,32 +173,57 @@ A=M
 M=D
 @SP
 M=M+1
-// push
-@THIS
-A=M+D
+//sub
+@SP
+AM=M-1
 D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-// push
-@THIS
-A=M+D
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-// push
+A=A-1
+M=M-D
+//push this 6
 @6
 D=A
-@5
-A=A+D
+@THIS
+A=M+D
 D=M
 @SP
 A=M
 M=D
 @SP
 M=M+1
+//push this 6
+@6
+D=A
+@THIS
+A=M+D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+//add
+@SP
+AM=M-1
+D=M
+A=A-1
+M=M+D
+//sub
+@SP
+AM=M-1
+D=M
+A=A-1
+M=M-D
+//push temp 6
+@11
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+//add
+@SP
+AM=M-1
+D=M
+A=A-1
+M=M+D
