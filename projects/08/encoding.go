@@ -1,0 +1,187 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type VMDecoder struct {
+	moduleName string
+	r          io.Reader
+	s          *bufio.Scanner
+	pc         uint16
+	currentCtx string
+}
+
+func NewVMDecoder(moduleName string, r io.Reader) *VMDecoder {
+	return &VMDecoder{r: r, s: bufio.NewScanner(r), moduleName: moduleName}
+}
+
+func (d *VMDecoder) decodeOperation(op string) (VMOperation, error) {
+	vmOp := VMOperation(op)
+	switch vmOp {
+	case OpPush:
+	case OpPop:
+	case OpAdd:
+	case OpSub:
+	case OpNeg:
+	case OpEq:
+	case OpGt:
+	case OpLt:
+	case OpAnd:
+	case OpOr:
+	case OpNot:
+	case OpLabel:
+	case OpGoto:
+	case OpIfGoto:
+	case OpFunction:
+	case OpCall:
+	case OpReturn:
+	default:
+		return "", fmt.Errorf("unsupported operation: %s", op)
+	}
+	return vmOp, nil
+}
+
+func (d *VMDecoder) decodeMemSegment(memSegment string) (VMMemSegment, error) {
+	vmMemSegment := VMMemSegment(memSegment)
+	switch vmMemSegment {
+	case SegArg:
+	case SegLcl:
+	case SegThis:
+	case SegThat:
+	case SegPointer:
+	case SegStatic:
+	case SegTemp:
+	case SegConst:
+	default:
+		return "", fmt.Errorf("unsupported mem segment: %s", memSegment)
+	}
+	return vmMemSegment, nil
+}
+
+func (d *VMDecoder) decodeUint16(arg string) (uint16, error) {
+	i, err := strconv.Atoi(arg)
+	if err != nil {
+		return 0, err
+	}
+	return uint16(i), nil
+}
+
+func (d *VMDecoder) decode(ln string) (VMCommand, error) {
+	defer d.incPc()
+	ln = d.stripComments(ln)
+	if ln == "" {
+		return nil, nil
+	}
+	tokens := strings.Split(ln, " ") // op **segment **index
+	op, err := d.decodeOperation(tokens[0])
+	if err != nil {
+		return nil, err
+	}
+
+	var firstArg string
+	var secondArg uint16
+	if len(tokens) > 1 {
+		firstArg = tokens[1]
+	}
+	if len(tokens) > 2 {
+		secondArg, err = d.decodeUint16(tokens[2])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	input := NewVMCommandInput{op: op, vmPc: d.pc, module: d.moduleName}
+	if op.IsMemoryAccess() {
+		input.seg, err = d.decodeMemSegment(firstArg)
+		if err != nil {
+			return nil, err
+		}
+		input.segIdx = secondArg
+	}
+	if op.IsFunction() {
+		input.funcName = firstArg
+		input.localSize = secondArg
+		d.currentCtx = input.funcName
+	}
+	if op.IsCall() {
+		input.funcName = firstArg
+		input.argSize = secondArg
+	}
+	if op.IsReturn() {
+		//ctx = ctx[0 : len(ctx)-1]
+	}
+	if op.IsFlowControl() {
+		input.labelName = firstArg
+		input.ctx = d.currentCtx
+	}
+	return NewVMCommand(input)
+}
+
+func (d *VMDecoder) incPc() {
+	d.pc += 1
+}
+
+func (d *VMDecoder) Decode() (VMCommand, error) {
+	if !d.s.Scan() {
+		err := d.s.Err()
+		if err == nil {
+			err = io.EOF
+		}
+		return nil, err
+	}
+	ln := d.s.Text()
+	return d.decode(ln)
+}
+
+func (d *VMDecoder) stripComments(s string) string {
+	return strings.TrimSpace(strings.Split(s, "//")[0])
+}
+
+type ASMEncoder struct {
+	w io.Writer
+}
+
+func NewASMEncoder(w io.Writer) (*ASMEncoder, error) {
+	enc := &ASMEncoder{w: w}
+	err := enc.init()
+	return enc, err
+}
+
+func (e *ASMEncoder) init() error {
+	if _, init := os.LookupEnv("INIT"); !init {
+		return nil
+	}
+	callSysInitAsm, err := initVMCommand.MarshalASM()
+	var s string
+	s += translateAssignConstantD(initSpValue)
+	s += `@SP
+M=D
+`
+	s += callSysInitAsm
+	if err != nil {
+		return err
+	}
+	_, err = e.w.Write([]byte(s))
+	return err
+}
+
+func (e *ASMEncoder) Encode(vmc VMCommand) error {
+	b, err := vmc.MarshalASM()
+	if err != nil {
+		return err
+	}
+	if _, debug := os.LookupEnv("DEBUG"); debug {
+		b = fmt.Sprintf("//%s\n", vmc) + b
+	}
+	_, err = e.w.Write([]byte(b))
+	if err != nil {
+		return err
+	}
+	return err
+}
