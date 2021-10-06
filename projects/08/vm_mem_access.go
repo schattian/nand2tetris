@@ -76,7 +76,7 @@ A=M
 
 func (cmd *popVMCommand) marshalASMStateless() (s string) {
 	s += translatePopToD()
-	if cmd.seg.IsPointer() { // TODO: Add fixed
+	if cmd.seg.IsPointer() {
 		s += translateGetPointerAddr(cmd.seg, cmd.segIdx)
 	} else if cmd.seg.IsStatic() {
 		s += translateGetStaticAddr(cmd.moduleName, cmd.segIdx)
@@ -85,7 +85,6 @@ func (cmd *popVMCommand) marshalASMStateless() (s string) {
 	}
 	return
 }
-
 
 func (cmd *popVMCommand) String() string {
 	return fmt.Sprintf("%s %s %d", cmd.GetOp(), cmd.seg, cmd.segIdx)
