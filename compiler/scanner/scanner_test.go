@@ -23,7 +23,7 @@ func TestScanner_Scan(t *testing.T) {
 			name: "multiline comment then, eof",
 			fields: fields{
 				src: []byte(`// foo bar
-`),
+		`),
 			},
 			wantTok: token.EOF,
 			wantLit: string(eof),
@@ -32,8 +32,8 @@ func TestScanner_Scan(t *testing.T) {
 			name: "multiline comment then var",
 			fields: fields{
 				src: []byte(`// foo bar
-				// bar
-var a int = 1;`),
+						// bar
+		var a int = 1;`),
 			},
 			wantTok: token.VAR,
 			wantLit: "var",
@@ -45,6 +45,31 @@ var a int = 1;`),
 			},
 			wantTok: token.EOF,
 			wantLit: string(eof),
+		},
+		{
+			name: "div with space",
+			fields: fields{
+				src: []byte(`/ 3;`),
+			},
+			wantTok: token.DIV,
+			wantLit: "/",
+		},
+		{
+			name: "int operation",
+			fields: fields{
+				src: []byte(`333 + 1;`),
+			},
+			wantTok: token.INTEGER_CONST,
+			wantLit: "333",
+		},
+
+		{
+			name: "div",
+			fields: fields{
+				src: []byte(`/3;`),
+			},
+			wantTok: token.DIV,
+			wantLit: "/",
 		},
 		{
 			name: "var",

@@ -29,7 +29,7 @@ func (s *Scanner) next() {
 
 func (s *Scanner) prev() {
 	s.offset -= 1
-	s.char = rune(s.src[s.offset])
+	s.char = rune(s.src[s.offset-1])
 }
 
 func (s *Scanner) skipComments() {
