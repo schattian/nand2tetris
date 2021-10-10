@@ -62,7 +62,6 @@ func TestScanner_Scan(t *testing.T) {
 			wantTok: token.INTEGER_CONST,
 			wantLit: "333",
 		},
-
 		{
 			name: "div",
 			fields: fields{
@@ -140,6 +139,15 @@ func TestScanner_Scan(t *testing.T) {
 			},
 			wantTok: token.EOF,
 			wantLit: string(eof),
+		},
+		{
+			name: "str const",
+			fields: fields{
+				src:    []byte(`= "foo";`),
+				offset: 2,
+			},
+			wantTok: token.STRING_CONST,
+			wantLit: "foo",
 		},
 	}
 	for _, tt := range tests {

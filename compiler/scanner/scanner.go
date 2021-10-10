@@ -58,20 +58,32 @@ func (s *Scanner) Scan() (tok token.Token, lit string) {
 	} else if unicode.IsSpace(s.char) {
 		s.next()
 		return s.Scan()
+	} else if isStringLiteralStart(s.char) {
+		tok, lit = s.scanStringLiteral()
 	} else if isIdentStart(s.char) {
-		tok, lit = s.scanLiteral()
+		tok, lit = s.scanIdentifier()
 	} else {
 		panic(string(s.char))
 	}
 	return
 }
 
-func (s *Scanner) scanLiteral() (tok token.Token, lit string) {
+func (s *Scanner) scanStringLiteral() (tok token.Token, lit string) {
+	s.next()
+	tok = token.STRING_CONST
+	for s.char != '"' {
+		lit += string(s.char)
+		s.next()
+	}
+	s.next()
+	return
+}
+
+func (s *Scanner) scanIdentifier() (tok token.Token, lit string) {
 	for isIdentBody(s.char) {
 		lit += string(s.char)
 		s.next()
 	}
-
 	if kwTok, isKw := llnTokens[lit]; isKw {
 		tok = kwTok
 	} else {
@@ -87,6 +99,10 @@ func (s *Scanner) scanDigits() (tok token.Token, lit string) {
 		s.next()
 	}
 	return
+}
+
+func isStringLiteralStart(r rune) bool {
+	return r == '"'
 }
 
 func isIdentStart(r rune) bool {

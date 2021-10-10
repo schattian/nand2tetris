@@ -12,9 +12,11 @@ const (
 	FIELD
 	STATIC
 	VAR
+	types_start
 	INT
 	CHAR
 	BOOLEAN
+	types_end
 	VOID
 	LET
 	DO
@@ -39,6 +41,7 @@ const (
 	SEMICOLON
 	COLON
 	// Operators - Arithmetic
+	operators_start
 	ADD
 	SUB
 	MUL
@@ -51,6 +54,7 @@ const (
 	GT
 	LT
 	EQ
+	operators_end
 	symbols_end
 
 	// Literals
