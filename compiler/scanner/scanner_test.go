@@ -168,3 +168,54 @@ func TestScanner_Scan(t *testing.T) {
 		})
 	}
 }
+
+func TestScanner_ScanFiveTimes(t *testing.T) {
+	type fields struct {
+		src    []byte
+		char   rune
+		offset int
+	}
+	type res struct {
+		tok token.Token
+		lit string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		res    [5]*res
+	}{
+		{
+			name: "class Foo {",
+			fields: fields{
+				src: []byte(`class Foo {}`),
+			},
+			res: [5]*res{
+				{tok: token.CLASS, lit: "class"},
+				{tok: token.IDENT, lit: "Foo"},
+				{tok: token.LBRACE, lit: "{"},
+				{tok: token.RBRACE, lit: "}"},
+				{tok: token.EOF, lit: string(eof)},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Scanner{
+				src:    tt.fields.src,
+				char:   tt.fields.char,
+				offset: tt.fields.offset,
+			}
+			s.init()
+			for _, want := range tt.res {
+				gotTok, gotLit := s.Scan()
+				if !reflect.DeepEqual(gotTok, want.tok) {
+					t.Errorf("Scanner.Scan() gotTok = '%v', want '%v'", gotTok, want.tok)
+				}
+				if gotLit != want.lit {
+					t.Errorf("Scanner.Scan() gotLit = '%v', want '%v'", gotLit, want.lit)
+				}
+			}
+
+		})
+	}
+}

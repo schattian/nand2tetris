@@ -14,6 +14,12 @@ type Scanner struct {
 	offset int
 }
 
+func New(src []byte) *Scanner {
+	s := &Scanner{src: src}
+	s.init()
+	return s
+}
+
 func (s *Scanner) init() {
 	s.next()
 }

@@ -6,36 +6,36 @@ func (t Token) String() string {
 	return tokens[t]
 }
 
-func (t Token) IsLiteral() bool {
+func IsLiteral(t Token) bool {
 	return t > literals_start && t < literals_end
 }
 
-func (t Token) IsSymbol() bool {
+func IsSymbol(t Token) bool {
 	return t > symbols_start && t < symbols_end
 }
 
-func (t Token) IsKeyword() bool {
+func IsKeyword(t Token) bool {
 	return t > keywords_start && t < keywords_end
 }
 
-func (t Token) IsNativeType() bool {
+func IsNativeType(t Token) bool {
 	return t > types_start && t < types_end
 }
 
-func (t Token) IsType() bool {
-	return t.IsNativeType() || t.IsIdentifier()
+func IsType(t Token) bool {
+	return IsNativeType(t) || IsIdentifier(t)
 }
 
-func (t Token) IsIdentifier() bool {
+func IsIdentifier(t Token) bool {
 	return t == IDENT
 }
 
-func (t Token) IsOperator() bool {
+func IsOperator(t Token) bool {
 	return t > operators_start && t < operators_end
 }
 
-func (t Token) IsBinaryOperator() bool {
-	return t.IsOperator() && t != NOT
+func IsBinaryOperator(t Token) bool {
+	return IsOperator(t) && t != NOT
 }
 
 func IsUnaryOperator(t Token) bool {

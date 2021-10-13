@@ -1,7 +1,9 @@
 package token
 
 const (
-	EOF Token = iota
+	ILLEGAL Token = iota
+
+	EOF
 
 	// Keywords
 	keywords_start
