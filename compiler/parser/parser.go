@@ -9,60 +9,100 @@ import (
 type parser struct {
 	m map[token.Token]parserFunc
 
-	s     *scanner.Scanner
-	token *parse.Token
+	s         *scanner.Scanner
+	token     *parse.Token
+	prevToken *parse.Token
+	nextToken *parse.Token
+	parent    *node
 }
 
-func Parse(src []byte) parse.Node {
+func New(src []byte, parent *node) *parser {
 	s := scanner.New(src)
-	p := &parser{s: s}
-	return p.parse()
+	if parent == nil {
+		schema := &nodeSchema{}
+		parent = schema.newNode()
+	}
+	return &parser{s: s, parent: parent}
 }
 
 type parserFunc func() parse.Node
 
-func (p *parser) parse() parse.Node {
+func (p *parser) Parse() parse.Node {
 	p.next()
 	if p.token.Token == token.EOF {
 		return nil
 	}
 
-	parserFunc, ok := map[token.Token]parserFunc{
-		token.CLASS:  p.parseClass,
-		token.STATIC: p.parseStatic,
-	}[p.token.Token]
-	if ok {
-		return parserFunc()
+	schema := p.parent.NextNodeSchema(p.token)
+	if schema == nil {
+		n := p.node()
+		return n
 	}
-
-	return p.node()
+	return p.parseSchema(schema)
 }
 
-func (p *parser) parseStatic() parse.Node {
-	n := nodeClassVarDec.newNode()
+func (p *parser) prepTermChild(n *node) *node {
+	n.AddNode(p.parent.popChild())
 	n.AddNode(p.node())
+	return n
+}
+
+func (p *parser) prepExpression(n *node) *node {
+	childSchema := n.NextNodeSchema(p.token)
+	n.AddNode(p.parseSchema(childSchema))
+	return n
+}
+
+func (p *parser) prepBaseCase(n *node) *node {
+	n.AddNode(p.node())
+	return n
+}
+
+func (p *parser) needLookahead(schema *nodeSchema) bool {
+	return p.parent.schema.nodeType == parse.NodeTerm && schema.nodeType == parse.NodeSubroutineCall
+}
+
+func (p *parser) parseSchema(schema *nodeSchema) parse.Node {
+	n := schema.newNode()
+	if p.needLookahead(schema) {
+		n = p.prepTermChild(n)
+	} else if schema.nodeType == parse.NodeExpression {
+		n = p.prepExpression(n)
+	} else {
+		n = p.prepBaseCase(n)
+	}
 	for {
-		ok := n.AddNode(p.parse())
+		p.parent = n
+		v := p.Parse()
+		ok := n.AddNode(v)
+		if !ok {
+			p.prev()
+		}
 		if !ok || n.closed {
 			return n
 		}
 	}
 }
 
-func (p *parser) parseClass() parse.Node {
-	n := nodeClass.newNode()
-	n.AddNode(p.node())
-	for {
-		ok := n.AddNode(p.parse())
-		if !ok {
-			return n
-		}
-	}
-}
 func (p *parser) node() *node {
 	return newTokenNode(p.token)
 }
 
 func (p *parser) next() {
+	p.prevToken = p.token
+	if p.nextToken != nil {
+		p.token = p.nextToken
+		p.nextToken = nil
+		return
+	}
 	p.token = parse.NewToken(p.s.Scan())
+}
+
+func (p *parser) prev() {
+	if p.prevToken == nil {
+		return
+	}
+	p.nextToken = p.token
+	p.token = p.prevToken
+	p.prevToken = nil
 }
