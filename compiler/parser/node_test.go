@@ -31,8 +31,8 @@ func Test_node_fieldsBySubset(t *testing.T) {
 		{
 			name: "3 subsets",
 			node: &node{
-				schema: &nodeSchema{
-					fieldsSchema: []*fieldSchema{fooFieldSubset0, fooFieldSubset1, fooFieldSubset2},
+				Schema: &nodeSchema{
+					FieldsSchema: []*fieldSchema{fooFieldSubset0, fooFieldSubset1, fooFieldSubset2},
 				},
 			},
 			wantSubsets: [][]*field{

@@ -2,20 +2,25 @@ package token
 
 type Token uint
 
+func (t Token) Type() Type {
+	return tokenTypes[t]
+}
+
 func (t Token) String() string {
 	return tokens[t]
 }
 
+func init() {
+	for tok := keywords_start + 1; tok < keywords_end; tok++ {
+		tokenTypes[tok] = TypeKw
+	}
+	for tok := symbols_start + 1; tok < symbols_end; tok++ {
+		tokenTypes[tok] = TypeSymbol
+	}
+}
+
 func IsLiteral(t Token) bool {
 	return t > literals_start && t < literals_end
-}
-
-func IsSymbol(t Token) bool {
-	return t > symbols_start && t < symbols_end
-}
-
-func IsKeyword(t Token) bool {
-	return t > keywords_start && t < keywords_end
 }
 
 func IsNativeType(t Token) bool {
@@ -45,3 +50,23 @@ func IsUnaryOperator(t Token) bool {
 func IsKeywordLiteral(t Token) bool {
 	return t == NULL || t == FALSE || t == TRUE || t == THIS
 }
+
+var tokenTypes = map[Token]Type{
+	NULL:          TypeKw,
+	FALSE:         TypeKw,
+	TRUE:          TypeKw,
+	THIS:          TypeKw,
+	IDENT:         TypeIdent,
+	STRING_CONST:  TypeStrConst,
+	INTEGER_CONST: TypeIntConst,
+}
+
+type Type string
+
+const (
+	TypeKw       Type = "keyword"
+	TypeSymbol   Type = "symbol"
+	TypeIntConst Type = "integerConstant"
+	TypeStrConst Type = "stringConstant"
+	TypeIdent    Type = "identifier"
+)

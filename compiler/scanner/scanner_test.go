@@ -29,11 +29,23 @@ func TestScanner_Scan(t *testing.T) {
 			wantLit: string(eof),
 		},
 		{
+			name: "multiline comment with wildcard then var",
+			fields: fields{
+				src: []byte(`/** 
+							 * sth
+							 * else
+							 */
+							 var a int = 1;`),
+			},
+			wantTok: token.VAR,
+			wantLit: "var",
+		},
+		{
 			name: "multiline comment then var",
 			fields: fields{
 				src: []byte(`// foo bar
-						// bar
-		var a int = 1;`),
+							 // bar
+						     var a int = 1;`),
 			},
 			wantTok: token.VAR,
 			wantLit: "var",

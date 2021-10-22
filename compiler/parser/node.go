@@ -1,55 +1,47 @@
 package parser
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/schattian/nand2tetris/compiler/parse"
 	"github.com/schattian/nand2tetris/compiler/token"
 )
 
 type node struct {
-	children []parse.Node
-	closed   bool
+	Child  []parse.Node `json:"child,omitempty"`
+	Closed bool         `json:"closed,omitempty"`
+	State  state        `json:"state,omitempty"`
 
-	state state
+	FieldsBySubset  [][]*field `json:"-"`
+	LastFieldSubset int        `json:"last_field_subset"`
 
-	fieldsBySubset  [][]*field
-	lastFieldSubset int
+	Schema *nodeSchema `json:"schema,omitempty"`
+}
 
-	schema *nodeSchema
+func (n *nodeSchema) String() string {
+	s, _ := json.Marshal(n)
+	return string(s)
+}
+
+func (n *node) String() string {
+	s, _ := json.MarshalIndent(n, "", "  ")
+	return string(s)
 }
 
 func (n *node) popChild() parse.Node {
-	child := n.children[len(n.children)-1]
-	n.children = n.children[0 : len(n.children)-1]
+	child := n.Child[len(n.Child)-1]
+	n.Child = n.Child[0 : len(n.Child)-1]
 	return child
 }
 
 type state int
 
 func (n *node) NextNodeSchema(tok *parse.Token) *nodeSchema {
-	nextSchema, ok := n.getSchemaByCtx()[tok.Token]
-	if !ok {
-		return nil
-		// return &nodeSchema{token: tok}
-	}
-	return nextSchema
-	// for _, fields := range n.getFieldsBySubset() {
-	// 	for _, field := range fields {
-	// 		if field.closed {
-	// 			continue
-	// 		}
-	// 		if nextSchema.nodeType == field.schema.mustNodeType {
-
-	// 		}
-
-	// 	}
-	// }
-	// return nil
+	return n.getSchemaByCtx()[tok.Token]
 }
 
 func (n *node) getSchemaByCtx() map[token.Token]*nodeSchema {
-	return schemaByCtx[n.schema.nodeType][n.state]
+	return schemaByCtx[n.Schema.NodeType][n.State]
 }
 
 var schemaByCtx = map[parse.NodeType]map[state]map[token.Token]*nodeSchema{
@@ -104,9 +96,9 @@ var schemaByCtx = map[parse.NodeType]map[state]map[token.Token]*nodeSchema{
 	parse.NodeLetStatement: {
 		0: {},
 		1: matchExpression,
+		2: {},
 	},
 
-	// TODO: this breaks the mapping since we are using parse.Statement instead.
 	parse.NodeIfStatement: {
 		0: {},
 		1: matchExpression,
@@ -116,8 +108,8 @@ var schemaByCtx = map[parse.NodeType]map[state]map[token.Token]*nodeSchema{
 			token.WHILE:  nodeWhileStatement,
 			token.DO:     nodeDoStatement,
 			token.RETURN: nodeReturnStatement,
-			//match statements
 		},
+		3: {},
 	},
 
 	parse.NodeWhileStatement: {
@@ -129,7 +121,6 @@ var schemaByCtx = map[parse.NodeType]map[state]map[token.Token]*nodeSchema{
 			token.WHILE:  nodeWhileStatement,
 			token.DO:     nodeDoStatement,
 			token.RETURN: nodeReturnStatement,
-			//match statements
 		},
 	},
 
@@ -157,6 +148,10 @@ var schemaByCtx = map[parse.NodeType]map[state]map[token.Token]*nodeSchema{
 		0: {},
 		1: {
 			token.IDENT:         nodeExpressionList,
+			token.TRUE:          nodeExpressionList,
+			token.NULL:          nodeExpressionList,
+			token.FALSE:         nodeExpressionList,
+			token.THIS:          nodeExpressionList,
 			token.LPAREN:        nodeExpressionList,
 			token.INTEGER_CONST: nodeExpressionList,
 			token.STRING_CONST:  nodeExpressionList,
@@ -175,6 +170,7 @@ var schemaByCtx = map[parse.NodeType]map[state]map[token.Token]*nodeSchema{
 		3: matchExpression,
 		// isIdent
 		4: {
+			token.DOT:    nodeSubroutineCall,
 			token.LPAREN: nodeSubroutineCall,
 		},
 	},
@@ -214,25 +210,20 @@ var matchExpression = map[token.Token]*nodeSchema{
 }
 
 func (n *node) AddNode(childNode parse.Node) (isAdded bool) {
-
-	if n.closed || childNode == nil {
+	if n.Closed || childNode == nil {
 		return false
 	}
-	if childNode.Token() != nil {
-		if childNode.Token().Token == token.RBRACE {
-			fmt.Println()
-		}
-	}
-	for _, field := range n.getFieldsBySubset()[n.lastFieldSubset] {
+
+	prevField := &field{}
+	for _, field := range n.getFieldsBySubset()[n.LastFieldSubset] {
 		isAdded = field.Add(childNode)
 		if isAdded {
 			if field.schema.nextState != 0 {
-				// n.state += field.nextStateChange()
-				n.state = field.schema.nextState
+				n.State = field.schema.nextState
 			}
-			n.lastFieldSubset = field.schema.subset
+			n.LastFieldSubset = field.schema.subset
 			if field.schema.isSubsetCloser {
-				n.lastFieldSubset += 1
+				n.LastFieldSubset += 1
 			}
 			if field.schema.isCloser {
 				n.close()
@@ -242,14 +233,19 @@ func (n *node) AddNode(childNode parse.Node) (isAdded bool) {
 		if !field.IsSatisfied() {
 			return false
 		}
-
+		prevField = field
+		if prevField.schema != nil && prevField.schema.isChainer {
+			if (prevField.valueCount-field.valueCount) > 1 || field.valueCount == 0 {
+				break
+			}
+		}
 	}
 
 	if isAdded {
-		n.children = append(n.children, childNode)
+		n.Child = append(n.Child, childNode)
 	} else {
-		if len(n.getFieldsBySubset())-1 > n.lastFieldSubset {
-			n.lastFieldSubset += 1
+		if len(n.getFieldsBySubset())-1 > n.LastFieldSubset {
+			n.LastFieldSubset += 1
 			return n.AddNode(childNode)
 		}
 	}
@@ -258,13 +254,13 @@ func (n *node) AddNode(childNode parse.Node) (isAdded bool) {
 }
 
 func (n *node) getFieldsBySubset() (subsets [][]*field) {
-	if n.fieldsBySubset != nil {
-		return n.fieldsBySubset
+	if n.FieldsBySubset != nil {
+		return n.FieldsBySubset
 	}
 
 	var subset []*field
 	var currentSubset int
-	for _, fieldSchema := range n.schema.fieldsSchema {
+	for _, fieldSchema := range n.Schema.FieldsSchema {
 		if fieldSchema.subset != currentSubset {
 			subsets = append(subsets, subset)
 			subset = nil
@@ -273,29 +269,30 @@ func (n *node) getFieldsBySubset() (subsets [][]*field) {
 		currentSubset = fieldSchema.subset
 	}
 	subsets = append(subsets, subset)
-	n.fieldsBySubset = subsets
+	n.FieldsBySubset = subsets
 	return
 }
 
 func (n *node) close() {
-	n.closed = true
+	n.Closed = true
 }
 
 func (n *node) Token() *parse.Token {
-	return n.schema.token
+	return n.Schema.Token
 }
 func (n *node) Type() parse.NodeType {
-	return n.schema.nodeType
+	return n.Schema.NodeType
 }
 
 func (n *node) Children() []parse.Node {
-	return n.children
+	return n.Child
 }
 
 type field struct {
-	schema *fieldSchema
-	state  state
-	closed bool
+	schema     *fieldSchema
+	state      state
+	valueCount int
+	closed     bool
 }
 
 func (f *field) Add(node parse.Node) bool {
@@ -308,17 +305,9 @@ func (f *field) Add(node parse.Node) bool {
 	if !f.schema.multiple {
 		f.closed = true
 	}
+	f.valueCount += 1
 	return true
 }
-
-// func (f *field) nextStateChange() state {
-// 	if f.state == 0 {
-// 		f.state += 1
-// 		return 1
-// 	}
-// 	f.state -= 1
-// 	return -1
-// }
 
 func (f *field) IsSatisfied() bool {
 	if f.closed {

@@ -3,8 +3,8 @@ package parse
 import "github.com/schattian/nand2tetris/compiler/token"
 
 type Token struct {
-	Token   token.Token
-	Literal string
+	Token   token.Token `json:"-"`
+	Literal string      `json:"literal"`
 }
 
 func NewToken(tok token.Token, lit string) *Token {

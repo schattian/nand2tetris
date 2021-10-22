@@ -7,8 +7,8 @@ import (
 
 var (
 	nodeClass = &nodeSchema{
-		nodeType: parse.NodeClass,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeClass,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.CLASS),
 			fieldIdentifier,
 			fieldLBrace,
@@ -19,8 +19,8 @@ var (
 	}
 
 	nodeClassVarDec = &nodeSchema{
-		nodeType: parse.NodeClassVarDec,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeClassVarDec,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.STATIC, token.FIELD),
 			fieldType,
 			fieldIdentifier,
@@ -31,8 +31,8 @@ var (
 	}
 
 	nodeSubroutineDec = &nodeSchema{
-		nodeType: parse.NodeSubroutineDec,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeSubroutineDec,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.CONSTRUCTOR, token.FUNCTION, token.METHOD),
 
 			{required: false, mustTokenRule: token.IsType, subset: 1, isSubsetCloser: true},
@@ -47,8 +47,8 @@ var (
 	}
 
 	nodeParameterList = &nodeSchema{
-		nodeType: parse.NodeParameterList,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeParameterList,
+		FieldsSchema: []*fieldSchema{
 			fieldType,
 			fieldIdentifier,
 			{required: false, multiple: true, mustOneOfTokens: []token.Token{token.COMMA}, subset: 1},
@@ -58,8 +58,8 @@ var (
 	}
 
 	nodeSubroutineBody = &nodeSchema{
-		nodeType: parse.NodeSubroutineBody,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeSubroutineBody,
+		FieldsSchema: []*fieldSchema{
 			fieldLBrace,
 			{required: false, multiple: true, mustNodeType: parse.NodeVarDec},
 			fieldStatements,
@@ -68,8 +68,8 @@ var (
 	}
 
 	nodeVarDec = &nodeSchema{
-		nodeType: parse.NodeVarDec,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeVarDec,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.VAR),
 			fieldType,
 			fieldIdentifier,
@@ -80,24 +80,24 @@ var (
 	}
 
 	nodeLetStatement = &nodeSchema{
-		nodeType: parse.NodeLetStatement,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeLetStatement,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.LET),
 			{required: true, mustOneOfTokens: []token.Token{token.IDENT}, nextState: 1},
 
-			{required: false, mustOneOfTokens: []token.Token{token.LBRACK}, subset: 1},
-			{required: false, mustNodeType: parse.NodeExpression, subset: 1},
+			{required: false, mustOneOfTokens: []token.Token{token.LBRACK}, subset: 1, isChainer: false},
+			{required: false, mustNodeType: parse.NodeExpression, subset: 1, nextState: 2},
 			{required: false, mustOneOfTokens: []token.Token{token.RBRACK}, subset: 1},
 
-			{required: true, mustOneOfTokens: []token.Token{token.EQ}, subset: 2},
+			{required: true, mustOneOfTokens: []token.Token{token.EQ}, subset: 2, nextState: 1},
 			{required: true, mustNodeType: parse.NodeExpression, subset: 2},
 			{required: true, mustOneOfTokens: []token.Token{token.SEMICOLON}, isCloser: true, subset: 2},
 		},
 	}
 
 	nodeIfStatement = &nodeSchema{
-		nodeType: parse.NodeIfStatement,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeIfStatement,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.IF),
 
 			{required: true, mustOneOfTokens: []token.Token{token.LPAREN}, nextState: 1},
@@ -108,16 +108,16 @@ var (
 			fieldStatements,
 			fieldRBrace,
 
-			{required: false, mustOneOfTokens: []token.Token{token.ELSE}, subset: 1},
+			{required: false, mustOneOfTokens: []token.Token{token.ELSE}, subset: 1, isChainer: true},
 			{required: false, mustOneOfTokens: []token.Token{token.LBRACE}, subset: 1},
-			{required: false, multiple: true, mustNodeType: parse.NodeStatement, subset: 1},
+			{required: false, multiple: true, mustNodeTypeRule: isStatement, subset: 1},
 			{required: false, mustOneOfTokens: []token.Token{token.RBRACE}, isCloser: true, subset: 1},
 		},
 	}
 
 	nodeWhileStatement = &nodeSchema{
-		nodeType: parse.NodeWhileStatement,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeWhileStatement,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.WHILE),
 
 			{required: true, mustOneOfTokens: []token.Token{token.LPAREN}, nextState: 1},
@@ -131,8 +131,8 @@ var (
 	}
 
 	nodeDoStatement = &nodeSchema{
-		nodeType: parse.NodeDoStatement,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeDoStatement,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.DO),
 			fieldMustType(parse.NodeSubroutineCall),
 			fieldSemicolon,
@@ -140,8 +140,8 @@ var (
 	}
 
 	nodeReturnStatement = &nodeSchema{
-		nodeType: parse.NodeReturnStatement,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeReturnStatement,
+		FieldsSchema: []*fieldSchema{
 			fieldMustTokens(token.RETURN),
 			{required: false, mustNodeType: parse.NodeExpression},
 			fieldSemicolon,
@@ -149,23 +149,23 @@ var (
 	}
 
 	nodeExpression = &nodeSchema{
-		nodeType: parse.NodeExpression,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeExpression,
+		FieldsSchema: []*fieldSchema{
 			{required: true, mustNodeType: parse.NodeTerm, nextState: 1},
-			{required: false, multiple: true, mustTokenRule: token.IsBinaryOperator, nextState: 2, subset: 1},
+			{required: false, multiple: true, mustTokenRule: token.IsBinaryOperator, nextState: 2, subset: 1, isChainer: true},
 			{required: false, multiple: true, mustNodeType: parse.NodeTerm, nextState: 1, subset: 1},
 		},
 	}
 
 	nodeTerm = &nodeSchema{
-		nodeType: parse.NodeTerm,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeTerm,
+		FieldsSchema: []*fieldSchema{
 			// unaryOp term
-			{required: false, mustTokenRule: token.IsUnaryOperator, nextState: 1},
+			{required: false, mustTokenRule: token.IsUnaryOperator, nextState: 1, isChainer: true},
 			{required: false, mustNodeType: parse.NodeTerm, isCloser: true},
 
 			// ( expression )
-			{required: false, mustOneOfTokens: []token.Token{token.LPAREN}, subset: 1, nextState: 2},
+			{required: false, mustOneOfTokens: []token.Token{token.LPAREN}, subset: 1, nextState: 2, isChainer: true},
 			{required: false, mustNodeType: parse.NodeExpression, subset: 1},
 			{required: false, mustOneOfTokens: []token.Token{token.RPAREN}, isCloser: true, subset: 1},
 
@@ -173,7 +173,7 @@ var (
 			{required: false, mustTokenRule: token.IsIdentifier, subset: 2, nextState: 4},
 
 			// ident [ expression ]
-			{required: false, mustOneOfTokens: []token.Token{token.LBRACK}, subset: 3, nextState: 3},
+			{required: false, mustOneOfTokens: []token.Token{token.LBRACK}, subset: 3, nextState: 3, isChainer: true},
 			{required: false, mustNodeType: parse.NodeExpression, subset: 3},
 			{required: false, mustOneOfTokens: []token.Token{token.RBRACK}, isCloser: true, subset: 3},
 
@@ -186,22 +186,22 @@ var (
 	}
 
 	nodeSubroutineCall = &nodeSchema{
-		nodeType: parse.NodeSubroutineCall,
-		fieldsSchema: []*fieldSchema{
+		NodeType: parse.NodeSubroutineCall,
+		FieldsSchema: []*fieldSchema{
 			fieldIdentifier,
 
-			{required: false, mustOneOfTokens: []token.Token{token.DOT}, subset: 1},
+			{required: false, mustOneOfTokens: []token.Token{token.DOT}, subset: 1, isChainer: true},
 			{required: false, mustOneOfTokens: []token.Token{token.IDENT}, subset: 1},
 
-			{required: true, mustOneOfTokens: []token.Token{token.LPAREN}, nextState: 1, subset: 2},
+			{required: true, mustOneOfTokens: []token.Token{token.LPAREN}, nextState: 1, subset: 2, isChainer: true},
 			{required: false, mustNodeType: parse.NodeExpressionList, subset: 2},
 			{required: true, mustOneOfTokens: []token.Token{token.RPAREN}, isCloser: true, subset: 2},
 		},
 	}
 	nodeExpressionList = &nodeSchema{
-		nodeType: parse.NodeExpressionList,
-		fieldsSchema: []*fieldSchema{
-			{required: false, mustNodeType: parse.NodeExpression},
+		NodeType: parse.NodeExpressionList,
+		FieldsSchema: []*fieldSchema{
+			{required: false, mustNodeType: parse.NodeExpression, isChainer: true},
 			{required: false, multiple: true, mustOneOfTokens: []token.Token{token.COMMA}, subset: 1},
 			{required: false, multiple: true, mustNodeType: parse.NodeExpression, subset: 1},
 		},
@@ -238,16 +238,17 @@ var (
 )
 
 func isStatement(n parse.NodeType) bool {
-	return n == parse.NodeIfStatement || n == parse.NodeLetStatement || n == parse.NodeWhileStatement || n == parse.NodeDoStatement
+	return n == parse.NodeIfStatement || n == parse.NodeLetStatement || n == parse.NodeWhileStatement || n == parse.NodeDoStatement || n == parse.NodeReturnStatement
 }
 
 type nodeSchema struct {
-	fieldsSchema []*fieldSchema
-	token        *parse.Token
-	nodeType     parse.NodeType
+	FieldsSchema []*fieldSchema `json:"-"`
+	Token        *parse.Token   `json:"token,omitempty"`
+	NodeType     parse.NodeType `json:"node_type,omitempty"`
 }
 
 type fieldSchema struct {
+	isChainer      bool
 	subset         int
 	required       bool
 	multiple       bool
@@ -288,10 +289,10 @@ func (f *fieldSchema) validate(node parse.Node) bool {
 }
 
 func (n *nodeSchema) newNode() *node {
-	return &node{schema: n}
+	return &node{Schema: n}
 }
 
 func newTokenNode(token *parse.Token) *node {
-	schema := &nodeSchema{token: token}
+	schema := &nodeSchema{Token: token, NodeType: parse.NodeLeaf}
 	return schema.newNode()
 }

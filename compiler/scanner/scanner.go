@@ -44,12 +44,28 @@ func (s *Scanner) skipComments() {
 	}
 
 	s.next()
-	if s.char != '/' {
+	if s.char != '/' && s.char != '*' {
 		s.prev()
 		return
 	}
+
+	if s.char == '*' {
+		s.next()
+		s.skipWildcardComment()
+	}
+
 	for s.char != '\n' && s.char != eof {
 		s.next()
+	}
+}
+
+func (s *Scanner) skipWildcardComment() {
+	for s.char != '*' {
+		s.next()
+	}
+	s.next()
+	if s.char != '/' {
+		s.skipWildcardComment()
 	}
 }
 
