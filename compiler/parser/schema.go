@@ -293,6 +293,6 @@ func (n *nodeSchema) newNode() *node {
 }
 
 func newTokenNode(token *parse.Token) *node {
-	schema := &nodeSchema{Token: token, NodeType: parse.NodeLeaf}
+	schema := &nodeSchema{Token: token, NodeType: parse.NodeToken}
 	return schema.newNode()
 }

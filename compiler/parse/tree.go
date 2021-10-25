@@ -76,7 +76,7 @@ const (
 	NodeSubroutineCall
 	NodeExpressionList
 
-	NodeLeaf
+	NodeToken
 )
 
 var nodeTypeTemplateNames = map[NodeType]string{
