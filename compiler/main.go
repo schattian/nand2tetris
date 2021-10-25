@@ -2,10 +2,9 @@ package main
 
 import (
 	"encoding/xml"
+	"github.com/schattian/nand2tetris/compiler/parse/parser"
 	"log"
 	"os"
-
-	"github.com/schattian/nand2tetris/compiler/parser"
 )
 
 func main() {

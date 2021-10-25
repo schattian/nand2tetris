@@ -22,15 +22,6 @@ func New(src []byte) *parser {
 	return &parser{s: s, parent: schema.newNode()}
 }
 
-func new(src []byte, parent *node) *parser {
-	s := scanner.New(src)
-	if parent == nil {
-		schema := &nodeSchema{}
-		parent = schema.newNode()
-	}
-	return &parser{s: s, parent: parent}
-}
-
 type parserFunc func() parse.Node
 
 func (p *parser) ParseTree() *parse.Tree {

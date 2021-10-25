@@ -135,11 +135,6 @@ func isIdentBody(r rune) bool {
 	return isIdentStart(r) || unicode.IsDigit(r)
 }
 
-func isLl1(char rune) bool {
-	_, ok := ll1Tokens[char]
-	return ok
-}
-
 var ll1Tokens = map[rune]token.Token{
 	-1:  token.EOF,
 	'(': token.LPAREN,

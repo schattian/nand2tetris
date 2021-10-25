@@ -3,8 +3,6 @@ package parser
 import (
 	"reflect"
 	"testing"
-
-	"github.com/schattian/nand2tetris/compiler/parse"
 )
 
 var (
@@ -14,15 +12,6 @@ var (
 )
 
 func Test_node_fieldsBySubset(t *testing.T) {
-	type fields struct {
-		children        []parse.Node
-		fields          []*field
-		token           *parse.Token
-		nodeType        parse.NodeType
-		closed          bool
-		lastField       int
-		lastFieldSubset int
-	}
 	tests := []struct {
 		name        string
 		node        *node

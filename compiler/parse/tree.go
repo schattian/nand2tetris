@@ -64,7 +64,6 @@ const (
 	NodeSubroutineBody
 	NodeVarDec
 
-	NodeStatement
 	NodeLetStatement
 	NodeIfStatement
 	NodeWhileStatement

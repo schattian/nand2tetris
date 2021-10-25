@@ -222,7 +222,6 @@ func fieldMustTokenRule(tokenRule func(t token.Token) bool) *fieldSchema {
 
 var (
 	fieldStatements = &fieldSchema{required: false, multiple: true, mustNodeTypeRule: isStatement}
-	fieldExpression = fieldMustType(parse.NodeExpression)
 
 	fieldSemicolon  = &fieldSchema{required: true, mustOneOfTokens: []token.Token{token.SEMICOLON}, isCloser: true}
 	fieldIdentifier = fieldMustTokens(token.IDENT)
@@ -231,10 +230,6 @@ var (
 	fieldLBrace       = fieldMustTokens(token.LBRACE)
 	fieldRBrace       = fieldMustTokens(token.RBRACE)
 	fieldRBraceCloser = &fieldSchema{required: true, mustOneOfTokens: []token.Token{token.RBRACE}, isCloser: true}
-
-	fieldLParen       = fieldMustTokens(token.LPAREN)
-	fieldRParen       = fieldMustTokens(token.RPAREN)
-	fieldRParenCloser = &fieldSchema{required: true, mustOneOfTokens: []token.Token{token.RPAREN}, isCloser: true}
 )
 
 func isStatement(n parse.NodeType) bool {
@@ -275,8 +270,8 @@ func (f *fieldSchema) validate(node parse.Node) bool {
 		return false
 	}
 	if f.mustOneOfTokens != nil {
-		for _, token := range f.mustOneOfTokens {
-			if node.Token().Token == token {
+		for _, tok := range f.mustOneOfTokens {
+			if node.Token().Token == tok {
 				return true
 			}
 		}

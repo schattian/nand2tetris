@@ -47,10 +47,6 @@ func IsUnaryOperator(t Token) bool {
 	return t == NOT || t == SUB
 }
 
-func IsKeywordLiteral(t Token) bool {
-	return t == NULL || t == FALSE || t == TRUE || t == THIS
-}
-
 var tokenTypes = map[Token]Type{
 	NULL:          TypeKw,
 	FALSE:         TypeKw,

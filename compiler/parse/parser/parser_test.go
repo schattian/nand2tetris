@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/schattian/nand2tetris/compiler/scanner"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -8,6 +9,15 @@ import (
 	"github.com/schattian/nand2tetris/compiler/parse"
 	"github.com/schattian/nand2tetris/compiler/token"
 )
+
+func newChild(src []byte, parent *node) *parser {
+	s := scanner.New(src)
+	if parent == nil {
+		schema := &nodeSchema{}
+		parent = schema.newNode()
+	}
+	return &parser{s: s, parent: parent}
+}
 
 func nodeFromSchema(t *testing.T, schema *nodeSchema, state state) *node {
 	t.Helper()
@@ -17,8 +27,6 @@ func nodeFromSchema(t *testing.T, schema *nodeSchema, state state) *node {
 }
 
 func TestParse(t *testing.T) {
-	type args struct {
-	}
 	tests := []struct {
 		name   string
 		src    []byte
@@ -701,7 +709,7 @@ func TestParse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := new(tt.src, tt.parent).Parse()
+			got := newChild(tt.src, tt.parent).Parse()
 			diff := cmp.Diff(got, tt.want, cmp.AllowUnexported(nodeSchema{}), cmpopts.IgnoreFields(node{}, "Schema", "State", "FieldsBySubset", "LastFieldSubset"))
 			if diff != "" {
 				t.Errorf("mismatch (-got +want):\n%s", diff)
